@@ -21,6 +21,7 @@ pip install -r requirements.txt
 
 Note: For GPU-based workloads, a separate PyTorch installation may be required.
 Please refer to the official PyTorch installation guide
+```
 
 # Quick Example
 
