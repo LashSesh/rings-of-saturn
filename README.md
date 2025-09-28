@@ -1,7 +1,14 @@
-# Rings of Saturn
+# Rings of Saturn (ℝ¹→ℝ⁵ Projection)
+# Blockchain-to-5D Spiral Embedding for Trustworthy Machine Learning
 
-Rings of Saturn ist eine Referenzimplementierung für die Spiral–HDAG–Coupling-Architektur. Das Projekt verbindet ein auditierbares Ledger mit einem tensor-basierten HDAG, Temporal Integrity Capsules (TIC) und Zero-Knowledge Machine Learning (ZKML), um vertrauenswürdige ML-Pipelines mit nachweisbarer Datenherkunft zu ermöglichen.
+Rings of Saturn is a reference architecture for an information system that goes beyond classical blockchains.
+Instead of storing data only in a linear chain, it couples a transparent ledger with a five-dimensional spiral structure.
+Within this spiral geometry emerge so-called Temporal Information Crystals (TICs) — stable memory units that condense information, secure it, and make it usable for machine learning.
 
+This creates a foundation for AI systems that not only learn, but whose learning process is provable, auditable, and trustworthy.
+With the integration of zero-knowledge mechanisms, models and predictions can be verified without exposing sensitive data.
+
+In short: Rings of Saturn is an experiment in embedding trust, transparency, and semantic coherence into the very infrastructure of AI — a bridge between blockchain, machine learning, and new forms of digital memory.”
 ## Installation
 
 1. Repository klonen
