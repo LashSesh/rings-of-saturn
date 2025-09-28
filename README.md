@@ -1,39 +1,31 @@
 # Rings of Saturn (ℝ¹→ℝ⁵ Projection)
 # Blockchain-to-5D Spiral Embedding for Trustworthy Machine Learning
 
-Rings of Saturn is a reference architecture for an information system that goes beyond classical blockchains.
-Instead of storing data only in a linear chain, it couples a transparent ledger with a five-dimensional spiral structure.
-Within this spiral geometry emerge so-called Temporal Information Crystals (TICs) — stable memory units that condense information, secure it, and make it usable for machine learning.
+**Rings of Saturn** is a reference implementation of the Spiral–HDAG–Coupling architecture.  
+It combines a verifiable ledger, a tensor-based Hyperdimensional DAG (HDAG),  
+and *Temporal Information Crystals (TICs)* to provide a new kind of memory layer for Machine Learning.  
+With integrated Zero-Knowledge ML (ZKML), the system enables **trustworthy, auditable, and privacy-preserving AI pipelines**.
 
-This creates a foundation for AI systems that not only learn, but whose learning process is provable, auditable, and trustworthy.
-With the integration of zero-knowledge mechanisms, models and predictions can be verified without exposing sensitive data.
-
-In short: Rings of Saturn is an experiment in embedding trust, transparency, and semantic coherence into the very infrastructure of AI — a bridge between blockchain, machine learning, and new forms of digital memory.”
 ## Installation
 
-1. Repository klonen
-   ```bash
-   git clone https://github.com/example/rings-of-saturn.git
-   cd rings-of-saturn
-   ```
-2. Virtuelle Umgebung anlegen (optional, empfohlen)
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
-   ```
-3. Abhängigkeiten installieren
-   ```bash
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
+### Clone the repository
+```bash
+git clone https://github.com/example/rings-of-saturn.git
+cd rings-of-saturn
 
-> Hinweis: Für GPU-basierte Workloads kann eine gesonderte PyTorch-Installation erforderlich sein. Details finden sich in der [PyTorch-Dokumentation](https://pytorch.org/).
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-## Schnelles Beispiel
+pip install --upgrade pip
+pip install -r requirements.txt
 
-Das folgende Beispiel zeigt, wie ein Sensorereignis im Ledger persistiert und anschließend ein Resonanz-Score im HDAG berechnet wird.
+Note: For GPU-based workloads, a separate PyTorch installation may be required.
+Please refer to the official PyTorch installation guide
 
-```python
+# Quick Example
+
+The following snippet demonstrates how to persist a sensor event in the Ledger and then compute a resonance score in the HDAG.
+
 import torch
 from ledger import Ledger
 from hdag.hdag import HDAG
@@ -47,11 +39,11 @@ hdag = HDAG()
 hdag.add_node("sensor", torch.tensor([1.0, 0.5, 0.1]))
 hdag.add_node("feature", torch.tensor([0.8, 0.55, 0.05]))
 hdag.add_edge("sensor", "feature", 0.9)
-print("Resonanz:", hdag.resonance(hdag.nodes["sensor"], hdag.nodes["feature"]))
-```
 
-Weitere Informationen zur Architektur, den APIs und exemplarischen Workflows finden sich in der [Projekt-Dokumentation](docs/index.md).
+print("Resonance:", hdag.resonance(hdag.nodes["sensor"], hdag.nodes["feature"]))
 
-## Lizenz
+For more details on the architecture, APIs, and example workflows, please refer to the project documentation.
 
-Dieses Projekt steht unter der [Apache-2.0-Lizenz](LICENSE).
+# License
+
+This project is licensed under the Apache-2.0 License.
