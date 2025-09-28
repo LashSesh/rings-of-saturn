@@ -53,4 +53,21 @@ def equal(x: Tensor, y: Tensor) -> bool:
     return x.flatten()._values == y.flatten()._values
 
 
-__all__ = ["Tensor", "tensor", "dot", "equal"]
+class Module:
+    """Minimal drop-in replacement for :class:`torch.nn.Module`."""
+
+    def forward(self, *args, **kwargs):  # pragma: no cover - override required
+        raise NotImplementedError
+
+    def __call__(self, *args, **kwargs):
+        return self.forward(*args, **kwargs)
+
+
+class _NNNamespace:
+    Module = Module
+
+
+nn = _NNNamespace()
+
+
+__all__ = ["Tensor", "tensor", "dot", "equal", "nn", "Module"]
