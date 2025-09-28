@@ -1,9 +1,9 @@
 # Rings of Saturn (ℝ¹→ℝ⁵ Projection)
-# Blockchain-to-5D Spiral Embedding for Trustworthy Machine Learning
+**Blockchain-to-5D Spiral Embedding for Trustworthy Machine Learning**
 
 **Rings of Saturn** is a reference implementation of the Spiral–HDAG–Coupling architecture.  
-It combines a verifiable ledger, a tensor-based Hyperdimensional DAG (HDAG),  
-and *Temporal Information Crystals (TICs)* to provide a new kind of memory layer for Machine Learning.  
+It combines a verifiable ledger, a tensor-based **Hyperdimensional DAG (HDAG)**,  
+and **Time Information Crystals (TICs)** to provide a spiralicious new kind of memory layer for Machine Learning.  
 With integrated Zero-Knowledge ML (ZKML), the system enables **trustworthy, auditable, and privacy-preserving AI pipelines**.
 
 ## Installation
