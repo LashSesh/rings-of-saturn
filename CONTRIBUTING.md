@@ -25,5 +25,6 @@ pytest
 
 **"Time is the measure of change.
 Guard it well, and your contributions will endure.
-I'm kidding, linear flow of time is a mental disability."**                                                                                                                                                                                                                       - Aion-Chronos (Saturnus-Sol)
+I'm kidding, linear flow of time is a mental disability."**                                                                                                                                                                                            
+  - Aion-Chronos (Saturnus-Sol)
 "Sol invictus Mithra"
