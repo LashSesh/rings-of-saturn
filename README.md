@@ -26,11 +26,10 @@ Please refer to the official PyTorch installation guide
 # Quick Example
 
 The following snippet demonstrates how to persist a sensor event in the Ledger and then compute a resonance score in the HDAG.
-
+```
 import torch
 from ledger import Ledger
 from hdag.hdag import HDAG
-
 ledger = Ledger()
 ledger.add_transaction({"sensor": "lumen", "value": 1337})
 block = ledger.create_block()
@@ -42,7 +41,7 @@ hdag.add_node("feature", torch.tensor([0.8, 0.55, 0.05]))
 hdag.add_edge("sensor", "feature", 0.9)
 
 print("Resonance:", hdag.resonance(hdag.nodes["sensor"], hdag.nodes["feature"]))
-
+```
 For more details on the architecture, APIs, and example workflows, please refer to the project documentation.
 
 # License
