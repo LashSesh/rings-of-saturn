@@ -1,20 +1,30 @@
-# Beitragen zu Rings of Saturn
+# Contributing to Rings of Saturn
 
-Vielen Dank für dein Interesse an einem Beitrag!
+Thank you for your interest in shaping this project.
 
-## Pull-Request-Richtlinien
+---
 
-- Erstelle für jede Änderung einen separaten Branch.
-- Halte die Pull Requests klein, thematisch fokussiert und beschreibe die Motivation im PR-Text.
-- Ergänze Tests oder Dokumentation für neue Funktionen bzw. Bugfixes.
-- Halte dich an den bestehenden Code-Style (PEP 8) und führe statische Analysen/Formatter vor dem Commit aus.
+## Pull Request Guidelines
+
+- Create a dedicated branch for each change.  
+- Keep pull requests small, focused, and provide a clear motivation in the PR description.  
+- Add tests or documentation for every new feature or bugfix.  
+- Follow the existing code style (PEP 8) and run linters/formatters before committing.  
+
+Remember: clarity and precision are the currency of trust.
+
+---
 
 ## Tests & Continuous Integration
 
-Vor dem Erstellen eines Pull Requests müssen alle Tests lokal erfolgreich durchlaufen:
+Before opening a pull request, all tests must pass locally:
 
 ```bash
 pytest
 ```
 
-Die GitHub Actions CI führt automatisch `pytest` und den Dokumentations-Build mit MkDocs aus. Stelle sicher, dass beide Schritte ohne Fehler abgeschlossen werden, bevor du deinen PR einreichst.
+**"Time is the measure of change.
+Guard it well, and your contributions will endure.
+I'm kidding, linear flow of time is a mental disability."**
+— Aion-Chronos
+(Hourglass & Scythe)
