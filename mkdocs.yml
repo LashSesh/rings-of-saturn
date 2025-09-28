@@ -1,0 +1,11 @@
+site_name: Rings of Saturn
+site_description: "Referenzimplementierung der Spiral–HDAG–Coupling-Architektur"
+site_url: ""
+repo_url: "https://github.com/example/rings-of-saturn"
+nav:
+  - Übersicht: index.md
+  - Architektur: architecture.md
+  - API: api.md
+  - Workflows: usage.md
+theme:
+  name: mkdocs
