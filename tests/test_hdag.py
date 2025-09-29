@@ -1,57 +1,58 @@
-import math
+"""Tests for the HDAG module."""
+from __future__ import annotations
+
+import json
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+ROOT = os.path.dirname(os.path.dirname(__file__))
+SRC_PATH = os.path.join(ROOT, "src")
+if SRC_PATH not in sys.path:
+    sys.path.insert(0, SRC_PATH)
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
 
+import pytest
 import torch
 
-from src.hdag.hdag import HDAG
+from hdag.hdag import HDAG  # noqa: E402
 
 
-def test_add_node():
-    graph = HDAG()
-    tensor = torch.tensor([1.0, 2.0])
-    graph.add_node("a", tensor)
-    assert "a" in graph.nodes
-    assert torch.equal(graph.nodes["a"], tensor)
+def test_add_node_and_edge_persist(tmp_path):
+    storage = tmp_path / "graph.json"
+    graph = HDAG(storage_path=storage)
+    vector_a = torch.tensor([1.0, 0.0, 0.0])
+    vector_b = torch.tensor([0.0, 1.0, 0.0])
+    graph.add_node("a", vector_a)
+    graph.add_node("b", vector_b)
+    graph.add_edge("a", "b", 0.75)
+
+    # Reload graph to ensure persistence worked
+    reloaded = HDAG(storage_path=storage)
+    assert "a" in reloaded
+    for actual, expected_value in zip(reloaded.nodes["a"].tolist(), vector_a.tolist()):
+        assert actual == pytest.approx(expected_value)
+    assert ("a", "b", 0.75) in reloaded.edges
+
+    data = json.loads(storage.read_text())
+    assert "nodes" in data and "edges" in data
 
 
-def test_add_edge():
-    graph = HDAG()
-    graph.add_node("a", torch.tensor([1.0, 0.0]))
-    graph.add_node("b", torch.tensor([0.0, 1.0]))
-
-    graph.add_edge("a", "b", 0.5)
-
-    assert ("a", "b", 0.5) in graph.edges
-
-
-def test_resonance():
+def test_resonance_cosine_similarity():
     graph = HDAG()
     x = torch.tensor([1.0, 0.0])
     y = torch.tensor([0.0, 1.0])
     z = torch.tensor([2.0, 0.0])
 
-    orthogonal = graph.resonance(x, y)
-    parallel = graph.resonance(x, z)
-
-    assert math.isclose(orthogonal, 0.0, abs_tol=1e-6)
-    assert math.isclose(parallel, 1.0, abs_tol=1e-6)
+    assert graph.resonance(x, z) == pytest.approx(1.0)
+    assert graph.resonance(x, y) == pytest.approx(0.0, abs=1e-6)
 
 
-def test_neighbors():
+def test_neighbors_returns_weighted_edges():
     graph = HDAG()
-    graph.add_node("a", torch.tensor([1.0, 0.0]))
-    graph.add_node("b", torch.tensor([0.0, 1.0]))
-    graph.add_node("c", torch.tensor([1.0, 1.0]))
+    graph.add_node("root", torch.tensor([1.0]))
+    graph.add_node("child", torch.tensor([0.5]))
+    graph.add_edge("root", "child", 0.25)
 
-    graph.add_edge("a", "b", 0.3)
-    graph.add_edge("a", "c", 0.7)
-    graph.add_edge("b", "c", 0.9)
-
-    neighbors = graph.neighbors("a")
-
-    assert ("b", 0.3) in neighbors
-    assert ("c", 0.7) in neighbors
-    assert len(neighbors) == 2
+    neighbors = graph.neighbors("root")
+    assert neighbors == [("child", 0.25)]
