@@ -1,33 +1,29 @@
-# Architekturübersicht
+# Architecture Overview
 
-Die Architektur von **Rings of Saturn** basiert auf dem ursprünglichen Projekt-Blueprint und gliedert sich in fünf miteinander verzahnte Subsysteme:
+The Rings of Saturn blueprint is organised into six tightly integrated subsystems.
+Each layer contributes a building block for verifiable, reproducible, and privacy-preserving machine learning workflows.
 
-1. **Ledger Layer** – Verantwortlich für unveränderliche Audit-Trails und die kryptographische Absicherung aller Ereignisse.
-2. **Hierarchical Directed Acyclic Graph (HDAG)** – Modelliert abhängige Tensorzustände und stellt Topologie-Operationen für die resonante Datenfusion bereit.
-3. **Spiral Orchestrator** – Ein Streaming- und Orchestrierungslayer, der den Datenfluss zwischen Ledger, HDAG und Downstream-Verbrauchern steuert.
-4. **Temporal Integrity Capsules (TIC)** – Zeitgekapselte Signaturen, die deterministische Reproduktionen von Modellläufen gewährleisten.
-5. **Zero-Knowledge Machine Learning (ZKML)** – Ermöglicht den vertraulichen Nachweis von ML-Inferenzen, ohne sensible Daten offenzulegen.
+## Modules
 
-## Datenfluss
+1. **Ledger** – Provides the immutable source of truth. Every ingestion event is batched into cryptographically linked blocks that downstream components reference for audit trails.
+2. **Hyperdimensional DAG (HDAG)** – Maintains tensor-native state within a directed acyclic graph. Resonance metrics help correlate features and detect drift across the knowledge base.
+3. **Spiral Orchestrator** – Acts as the streaming control plane. It ingests events, applies backpressure, and fans out validated payloads to HDAG, TIC, and ML consumers.
+4. **Temporal Integrity Capsules (TIC)** – Capture reproducible snapshots of model artefacts, including parameters, input provenance, and HDAG slices. TICs provide the deterministic anchor for audits.
+5. **Machine Learning (ML)** – Supplies PyTorch utilities and training scripts that transform TIC material into deployable inference services.
+6. **Zero-Knowledge ML (ZKML)** – Generates verifiable proofs about model predictions. The current mock implementation hashes statements and witnesses, demonstrating how future SNARK/STARK integrations can slot in.
 
-1. Ereignisse gelangen über Gateways in den **Spiral Orchestrator**.
-2. Spiral persistiert alle eingehenden Ereignisse im **Ledger**, signiert Blöcke und versieht sie mit kryptographischen Nachweisen.
-3. Validierte Zustände werden in den **HDAG** übernommen. Resonanz-Operationen prüfen Tensorbeziehungen und liefern kontextuelle Features.
-4. **TICs** kapseln den Zustand jeder Inferenzen (Model, Parameter, HDAG-Schnappschuss) und erstellen reproduzierbare Artefakte.
-5. **ZKML** baut auf den TIC-Artefakten auf, generiert Zero-Knowledge-Proofs über die Modellinferenz und stellt sie externen Auditor:innen bereit.
+## Data Flow Summary
 
-## Komponenteninteraktion
+1. External events enter the system through Spiral, which immediately persists them to the Ledger.
+2. Confirmed ledger blocks trigger HDAG updates. Tensor operations compute resonance signals and feed feature stores.
+3. TICs package model runs with their dependent ledger and HDAG artefacts to enable deterministic replay.
+4. ML services consume TIC inputs to execute inference pipelines.
+5. ZKML derives statements from ML predictions, commits to the underlying witnesses, and produces proofs that can be shared with auditors without exposing raw data.
 
-- Das Ledger fungiert als Quelle der Wahrheit. Jede HDAG-Aktualisierung muss auf einem bestätigten Block basieren.
-- Spiral kümmert sich um Backpressure, Priorisierung und das Triggern von Re-Computations, sobald TICs oder ZKML-Proofs veraltet sind.
-- TICs können sowohl vom Ledger (für Audit) als auch von ZKML (für Proof-Generierung) referenziert werden.
+## Deployment Considerations
 
-## Deployment
+- **Control Plane** – Spiral API, scheduling logic, and monitoring services.
+- **Data Plane** – Scalable HDAG workers (GPU-enabled when necessary) and replicated ledger nodes.
+- **Proof Plane** – ZKML proving and verification services, ready to be replaced with production-grade circuits.
 
-Das Blueprint sieht eine containerisierte Bereitstellung vor:
-
-- **Control Plane**: Spiral Orchestrator (FastAPI/gRPC) und Scheduler.
-- **Data Plane**: HDAG-Worker mit GPU-Unterstützung und Ledger-Replikate.
-- **Proof Plane**: ZKML-Prover/Verifier-Cluster.
-
-Die Referenzimplementierung in diesem Repository deckt die Kernlogik von Ledger und HDAG ab und stellt Stub-Interfaces für Spiral, TIC und ZKML bereit, damit Erweiterungen nach dem Blueprint erfolgen können.
+The reference implementation in this repository focuses on the Ledger, HDAG, and the mocked ZKML components while leaving Spiral, TIC, and full ML orchestration open for future contributors.
