@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    command: ["uvicorn", "api.server:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+
+  cli:
+    build: .
+    command: ["rings", "--help"]
+    volumes:
+      - ./:/app
+    tty: true
+    stdin_open: true
+
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: saturn
+      POSTGRES_PASSWORD: saturn
+      POSTGRES_DB: saturn
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  db-data:
