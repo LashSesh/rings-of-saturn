@@ -1,40 +1,52 @@
-from torch import dot, tensor
+"""Tests for the Time Information Crystals module."""
+
+import torch
 
 from src.tic import TIC
 
 
-def resonance(x, y):
-    return dot(x, y)
+def test_condense_selects_maximum_resonance_vector() -> None:
+    """The vector aligned with most others should be chosen."""
 
-
-def test_condense_selects_highest_resonance_attractor():
-    histories = [
-        [tensor([1.0, 0.0]), tensor([0.0, 1.0])],
-        [tensor([1.0, 1.0])],
+    vectors = [
+        torch.tensor([1.0, 0.0]),
+        torch.tensor([1.0, 1.0]),
+        torch.tensor([-1.0, 0.0]),
     ]
 
-    tic = TIC()
-    state = tic.condense(histories, resonance)
+    attractor = TIC.condense(vectors)
 
-    assert state is not None
-    assert state.flatten()._values == [1.0, 1.0]
-
-
-def test_get_state_returns_current_state():
-    histories = [[tensor([2.0, 0.0])], [tensor([0.0, 3.0])]]
-    tic = TIC()
-    tic.condense(histories, resonance)
-
-    state = tic.get_state()
-
-    assert state is not None
-    assert state.flatten()._values == tic.state.flatten()._values
+    # The vector pointing towards the mean of the others should win.
+    assert attractor.tolist() == vectors[1].tolist()
 
 
-def test_to_dict_exports_state():
-    tic = TIC()
-    tic.state = tensor([4.0, 5.0])
+def test_tensor_product_matches_kronecker_definition() -> None:
+    """Tensor product should coincide with PyTorch's Kronecker product."""
 
-    result = tic.to_dict()
+    blocks = [
+        torch.tensor([1.0, 2.0]),
+        torch.tensor([0.5, -0.5]),
+        torch.tensor([3.0]),
+    ]
 
-    assert result == {"tic": [4.0, 5.0]}
+    combined = TIC.tensor_product(blocks)
+    expected = torch.tensor([
+        blocks[0].tolist()[0] * blocks[1].tolist()[0] * 3.0,
+        blocks[0].tolist()[0] * blocks[1].tolist()[1] * 3.0,
+        blocks[0].tolist()[1] * blocks[1].tolist()[0] * 3.0,
+        blocks[0].tolist()[1] * blocks[1].tolist()[1] * 3.0,
+    ])
+
+    assert combined.tolist() == expected.tolist()
+
+
+def test_invariant_tolerates_small_numerical_noise() -> None:
+    """Invariant check should accept values within tolerance bounds."""
+
+    state = torch.tensor([1.0, 2.0, 3.0])
+    perturbed = torch.tensor([1.0 + 1e-7, 2.0 - 5e-7, 3.0 + 2e-7])
+
+    assert TIC.invariant(state, perturbed)
+    far = torch.tensor([value + 1e-2 for value in state.tolist()])
+    assert not TIC.invariant(state, far)
+
