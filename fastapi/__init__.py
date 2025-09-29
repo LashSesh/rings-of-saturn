@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import inspect
 import typing
-from typing import Any, Callable, Dict, Tuple
+from urllib.parse import parse_qs
+from typing import Any, Callable, Dict, Iterable, Tuple
 
 
 class HTTPException(Exception):
@@ -15,12 +16,12 @@ class HTTPException(Exception):
         self.detail = detail
 
 
-class FastAPI:
-    """Very small subset of the FastAPI application interface."""
+class APIRouter:
+    """Lightweight stand-in for FastAPI's :class:`APIRouter`."""
 
-    def __init__(self, *, title: str | None = None, version: str | None = None) -> None:
-        self.title = title
-        self.version = version
+    def __init__(self, *, prefix: str = "", tags: Iterable[str] | None = None) -> None:
+        self.prefix = prefix.rstrip("/")
+        self.tags = list(tags or [])
         self._routes: Dict[Tuple[str, str], Callable[..., Any]] = {}
 
     def post(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
@@ -31,10 +32,33 @@ class FastAPI:
 
     def _register(self, method: str, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-            self._routes[(method.upper(), path)] = func
+            full_path = f"{self.prefix}{path}" if self.prefix else path
+            self._routes[(method.upper(), full_path)] = func
             return func
 
         return decorator
+
+    def iter_routes(self) -> Iterable[Tuple[Tuple[str, str], Callable[..., Any]]]:
+        return self._routes.items()
+
+
+class FastAPI(APIRouter):
+    """Very small subset of the FastAPI application interface."""
+
+    def __init__(self, *, title: str | None = None, version: str | None = None) -> None:
+        super().__init__(prefix="")
+        self.title = title
+        self.version = version
+        self._mounts: Dict[str, Any] = {}
+
+    def include_router(self, router: APIRouter, *, prefix: str = "") -> None:
+        prefix = prefix.rstrip("/")
+        for (method, path), handler in router.iter_routes():
+            full_path = f"{prefix}{path}" if prefix else path
+            self._routes[(method, full_path)] = handler
+
+    def mount(self, path: str, app: Any, name: str | None = None) -> None:  # pragma: no cover - noop
+        self._mounts[path] = {"app": app, "name": name}
 
     # Helpers used by the test client --------------------------------------------------
     def get_route(self, method: str, path: str) -> Callable[..., Any]:
@@ -66,7 +90,16 @@ class TestClient:
         return self._request("GET", path, params or {})
 
     def _request(self, method: str, path: str, data: Any) -> _Response:
-        handler = self.app.get_route(method, path)
+        path_only, _, query = path.partition("?")
+        handler = self.app.get_route(method, path_only)
+        if query:
+            query_dict = {key: values[-1] for key, values in parse_qs(query).items()}
+            if isinstance(data, dict):
+                merged = dict(query_dict)
+                merged.update(data)
+                data = merged
+            else:
+                data = query_dict
         try:
             result = self._call_handler(handler, data)
             return _Response(200, result)
@@ -88,11 +121,40 @@ class TestClient:
             if isinstance(annotation, type) and issubclass(annotation, BaseModel):
                 arguments.append(annotation(**data))
             else:
-                arguments.append(data)
+                if isinstance(data, dict):
+                    value = data.get(parameter.name, parameter.default)
+                    annotation_type = annotation if isinstance(annotation, type) else None
+                    if annotation_type in (int, float):
+                        try:
+                            value = annotation_type(value)
+                        except Exception:  # pragma: no cover - fallback to original value
+                            pass
+                    arguments.append(value)
+                else:
+                    arguments.append(data)
         return handler(*arguments)
+
+
+class StaticFiles:
+    """Placeholder implementation so imports succeed in tests."""
+
+    def __init__(self, directory: str, html: bool = False) -> None:  # pragma: no cover - simple data holder
+        self.directory = directory
+        self.html = html
 
 
 TestClient.__test__ = False
 
 
-__all__ = ["FastAPI", "HTTPException", "TestClient"]
+def Query(default: Any, **_: Any) -> Any:  # pragma: no cover - helper for compatibility
+    return default
+
+
+__all__ = [
+    "APIRouter",
+    "FastAPI",
+    "HTTPException",
+    "Query",
+    "StaticFiles",
+    "TestClient",
+]

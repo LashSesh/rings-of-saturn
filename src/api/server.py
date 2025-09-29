@@ -4,14 +4,20 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from pydantic import BaseModel, Field
 import torch
 from torch import nn
 
-from ledger import Ledger
-from hdag.hdag import HDAG
-from tic import TIC
-from zkml import ZKML
+from dashboard.backend.routes import router as dashboard_router
+from dashboard.backend.services import (
+    hdag_service,
+    ledger_service,
+    tic_service,
+    zkml_service,
+)
+from dashboard.backend.state import reset_last_proof, set_last_proof
 from zkml.zk_inference import build_statement, build_witness
 
 
@@ -29,10 +35,8 @@ class DummyCNN(nn.Module):
         return torch.tensor(mean_val, dtype=torch.float32)
 
 
-ledger_service = Ledger()
-hdag_service = HDAG()
-tic_service = TIC()
-zkml_service = ZKML()
+# The service instances now live inside ``dashboard.backend.services`` so the
+# dashboard endpoints and the public API operate on the same shared state.
 ml_model = DummyCNN()
 
 
@@ -101,6 +105,18 @@ class ZKVerifyRequest(BaseModel):
 
 
 app = FastAPI(title="Rings of Saturn API", version="0.1.0")
+
+FRONTEND_DIST = (
+    Path(__file__).resolve().parent.parent / "dashboard" / "frontend" / "dist"
+)
+if FRONTEND_DIST.exists():  # pragma: no cover - optional static mount
+    app.mount(
+        "/app",
+        StaticFiles(directory=str(FRONTEND_DIST), html=True),
+        name="dashboard-app",
+    )
+
+app.include_router(dashboard_router, prefix="/dashboard")
 
 
 def _to_list(values: Any) -> List[float]:
@@ -206,11 +222,14 @@ def zkml_infer(vector: List[float]) -> Dict[str, Any]:
     witness = build_witness(ml_model, input_tensor)
     prediction, proof = zkml_service.zk_inference(ml_model, input_tensor)
     statement = build_statement(prediction, witness)
-    return {
+    payload = {
         "prediction": _as_float(prediction),
         "proof": proof,
         "statement": statement,
     }
+    payload["input"] = vector
+    set_last_proof(payload)
+    return payload
 
 
 def zkml_verify(statement: str, proof: str) -> Dict[str, Any]:
@@ -295,4 +314,5 @@ def reset_state() -> None:
     hdag_service.nodes.clear()
     hdag_service.edges.clear()
     tic_service.state = None
+    reset_last_proof()
 
