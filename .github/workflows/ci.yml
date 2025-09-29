@@ -34,7 +34,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.repository }}:ci .
+      codex/implement-block-5-for-rings-of-saturn
+        env:
+          IMAGE_NAME: ghcr.io/${{ toLower(github.repository) }}:ci
+        run: docker build -t "$IMAGE_NAME" .
 
       - name: Run tests inside Docker image
-        run: docker run --rm ghcr.io/${{ github.repository }}:ci pytest
+        env:
+          IMAGE_NAME: ghcr.io/${{ toLower(github.repository) }}:ci
+        run: docker run --rm "$IMAGE_NAME" pytest
+main
