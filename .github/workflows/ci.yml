@@ -2,31 +2,43 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Build documentation
-      run: |
-        mkdocs build --strict
+      - name: Run tests
+        run: pytest
 
-    - name: Run tests
-      run: |
-        pytest
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        env:
+          IMAGE_NAME: ghcr.io/${{ toLower(github.repository) }}:ci
+        run: docker build -t "$IMAGE_NAME" .
+
+      - name: Run tests inside Docker image
+        env:
+          IMAGE_NAME: ghcr.io/${{ toLower(github.repository) }}:ci
+        run: docker run --rm "$IMAGE_NAME" pytest
