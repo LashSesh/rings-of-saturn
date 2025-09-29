@@ -1,2 +1,4 @@
+fastapi>=0.110
 mkdocs>=1.5
 pytest>=7.4
+typer>=0.9
