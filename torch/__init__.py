@@ -33,6 +33,27 @@ class Tensor:
             raise ValueError("Can only convert a single element tensor to a Python scalar")
         return self._values[0]
 
+    def tolist(self) -> list[float]:
+        return self._values[:]
+
+    def detach(self) -> "Tensor":
+        return Tensor(self)
+
+    def cpu(self) -> "Tensor":
+        return Tensor(self)
+
+    def clone(self) -> "Tensor":
+        return Tensor(self)
+
+    def __iter__(self):  # pragma: no cover - trivial iterator
+        return iter(self._values)
+
+    def __len__(self) -> int:  # pragma: no cover - trivial
+        return len(self._values)
+
+    def __getitem__(self, item):  # pragma: no cover - trivial
+        return self._values[item]
+
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return f"Tensor({self._values!r})"
 

@@ -1,8 +1,11 @@
-"""Spiral component for the Rings of Saturn project."""
+"""Spiral module implementing a five dimensional helical mapping."""
 from __future__ import annotations
 
 import math
-from typing import Any, Sequence, Tuple
+from dataclasses import dataclass
+from typing import Sequence, Tuple
+
+import torch
 
 try:  # pragma: no cover - optional dependency
     import matplotlib
@@ -14,88 +17,95 @@ try:  # pragma: no cover - optional dependency
 except ModuleNotFoundError:  # pragma: no cover - handled in plot method
     matplotlib = None  # type: ignore[assignment]
     plt = None  # type: ignore[assignment]
-    Axes = Figure = Any  # type: ignore[assignment]
+    Axes = Figure = object  # type: ignore[assignment]
 
 
+@dataclass
 class Spiral:
-    """Utility class to work with a five-dimensional spiral."""
+    r"""Spiral that maps angles to five-dimensional torch tensors.
 
-    def spiral(self, theta: float, a: float = 1.0, b: float = 0.5, c: float = 0.1) -> Tuple[float, ...]:
-        """Compute a point on a five-dimensional spiral.
+    The mapping follows the parametric equation:
+
+    .. math::
+        (a \cos \theta, a \sin \theta, b \cos 2\theta, b \sin 2\theta, c \theta)
+
+    Parameters are configurable to allow different scales on each dimension.
+    """
+
+    a: float = 1.0
+    b: float = 0.5
+    c: float = 0.1
+
+    def map(self, theta: float) -> torch.Tensor:
+        """Return the spiral projection for ``theta``.
 
         Args:
             theta: Angle parameter controlling the position on the spiral.
-            a: Radius for the first two dimensions.
-            b: Radius for the third and fourth dimensions.
-            c: Growth rate for the fifth dimension.
 
         Returns:
-            A tuple representing a point on the 5D spiral.
+            A five-dimensional tensor representing the spiral point.
         """
 
-        x1 = a * math.cos(theta)
-        x2 = a * math.sin(theta)
-        x3 = b * math.cos(2 * theta)
-        x4 = b * math.sin(2 * theta)
-        x5 = c * theta
-        return (x1, x2, x3, x4, x5)
+        values = (
+            self.a * math.cos(theta),
+            self.a * math.sin(theta),
+            self.b * math.cos(2 * theta),
+            self.b * math.sin(2 * theta),
+            self.c * theta,
+        )
+        return torch.tensor(values)
 
-    def resonance(self, x: Sequence[float], y: Sequence[float]) -> float:
-        """Compute the cosine similarity between two five-dimensional points.
+    def plot(self, n_points: int = 200) -> Tuple[Figure, Axes]:
+        """Plot the first three dimensions of the spiral.
 
         Args:
-            x: First 5D point.
-            y: Second 5D point.
+            n_points: Number of points sampled along the spiral. Must be at least 2.
 
         Returns:
-            The cosine similarity between the two points.
+            The matplotlib figure and axis containing the plot.
 
         Raises:
-            ValueError: If the vectors have different dimensions or zero magnitude.
+            RuntimeError: If matplotlib is not installed in the environment.
+            ValueError: If ``n_points`` is less than 2.
+        """
+
+        if plt is None or matplotlib is None:  # pragma: no cover - optional dependency
+            raise RuntimeError("matplotlib is required for plotting but is not installed.")
+
+        if n_points < 2:
+            raise ValueError("n_points must be at least 2.")
+
+        thetas = [i * (4 * math.pi) / (n_points - 1) for i in range(n_points)]
+        points = [self.map(theta).tolist() for theta in thetas]
+        xs, ys, zs = zip(*((p[0], p[1], p[2]) for p in points))
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection="3d")
+        ax.plot(xs, ys, zs, label="Spiral 5D → 3D projection")
+        ax.set_xlabel("x₁")
+        ax.set_ylabel("x₂")
+        ax.set_zlabel("x₃")
+        ax.legend()
+        fig.tight_layout()
+        return fig, ax
+
+    @staticmethod
+    def resonance(x: Sequence[float], y: Sequence[float]) -> float:
+        """Compute cosine similarity between two vectors.
+
+        This helper mirrors the behaviour of the historic implementation and is kept
+        for backwards compatibility. The ledger and HDAG modules use torch based
+        operations instead.
         """
 
         if len(x) != len(y):
-            raise ValueError("Vectors must have the same dimensionality")
+            raise ValueError("Vectors must share dimensionality for resonance computation.")
 
         dot_product = sum(float(a) * float(b) for a, b in zip(x, y))
         x_norm_sq = sum(float(a) ** 2 for a in x)
         y_norm_sq = sum(float(b) ** 2 for b in y)
 
         if x_norm_sq == 0.0 or y_norm_sq == 0.0:
-            raise ValueError("Cannot compute cosine similarity for zero vector")
+            raise ValueError("Cannot compute cosine similarity for zero magnitude vectors.")
 
-        denominator = math.sqrt(x_norm_sq) * math.sqrt(y_norm_sq)
-        return dot_product / denominator
-
-    def plot_3d(self, n_points: int = 200) -> Tuple[Figure, Axes]:
-        """Plot the first three dimensions of the spiral in 3D space.
-
-        Args:
-            n_points: Number of points to sample along the spiral.
-
-        Returns:
-            A tuple with the created matplotlib figure and axes.
-
-        Raises:
-            RuntimeError: If matplotlib is not installed.
-        """
-
-        if plt is None or matplotlib is None:
-            raise RuntimeError("matplotlib is required for plotting but is not installed.")
-
-        if n_points <= 1:
-            raise ValueError("n_points must be greater than 1 to create a plot")
-
-        thetas = [i * (4 * math.pi) / (n_points - 1) for i in range(n_points)]
-        points = [self.spiral(theta) for theta in thetas]
-        xs, ys, zs = zip(*((p[0], p[1], p[2]) for p in points))
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection="3d")
-        ax.plot(xs, ys, zs, label="5D Spiral (3D projection)")
-        ax.set_xlabel("X")
-        ax.set_ylabel("Y")
-        ax.set_zlabel("Z")
-        ax.legend()
-        fig.tight_layout()
-        return fig, ax
+        return dot_product / math.sqrt(x_norm_sq * y_norm_sq)
